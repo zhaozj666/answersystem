@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+  push:
+    branches: ["main", "master"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Python syntax check
+        run: PYTHONPATH=src python -m py_compile src/app.py src/flask/__init__.py src/pypdf/__init__.py src/docx/__init__.py
+
+      - name: Start app and smoke test
+        run: |
+          PYTHONPATH=src python src/app.py > /tmp/app.log 2>&1 &
+          APP_PID=$!
+          sleep 2
+          curl -f http://127.0.0.1:8000 > /tmp/home.html
+          kill $APP_PID
