@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ app_name }}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>{{ app_name }}</h1>
+      <p class="hint">文档投放目录：<code>docs/policies/</code>（支持 PDF、DOCX、TXT、MD）</p>
+
+      <section class="panel">
+        <button id="reindexBtn">重建索引（文档更新后点击）</button>
+        <p id="status"></p>
+      </section>
+
+      <section class="panel">
+        <label for="question">请输入问题（仅中文）：</label>
+        <textarea id="question" placeholder="例如：差旅住宿报销额度是多少？"></textarea>
+        <button id="askBtn">提问</button>
+      </section>
+
+      <section class="panel">
+        <h2>回答</h2>
+        <pre id="answer">暂无回答</pre>
+        <h3>引用来源</h3>
+        <ul id="citations"></ul>
+      </section>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const answerEl = document.getElementById('answer');
+      const citationsEl = document.getElementById('citations');
+
+      document.getElementById('reindexBtn').addEventListener('click', async () => {
+        statusEl.textContent = '正在重建索引...';
+        const res = await fetch('/api/reindex', { method: 'POST' });
+        const data = await res.json();
+        statusEl.textContent = data.message || '完成';
+      });
+
+      document.getElementById('askBtn').addEventListener('click', async () => {
+        const question = document.getElementById('question').value.trim();
+        if (!question) {
+          statusEl.textContent = '请输入问题';
+          return;
+        }
+        statusEl.textContent = '正在检索...';
+
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          statusEl.textContent = data.error || '提问失败';
+          return;
+        }
+
+        answerEl.textContent = data.answer || '暂无回答';
+        citationsEl.innerHTML = '';
+        (data.citations || []).forEach(c => {
+          const li = document.createElement('li');
+          li.textContent = `${c.source}：${c.preview}`;
+          citationsEl.appendChild(li);
+        });
+        statusEl.textContent = '完成';
+      });
+    </script>
+  </body>
+</html>
