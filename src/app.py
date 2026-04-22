@@ -59,6 +59,8 @@ class LocalPolicyQA:
 
     def _split_text(self, text: str, max_len: int = 280) -> List[str]:
         raw = [p.strip() for p in re.split(r"[\n\r]+", text) if p.strip()]
+        if not raw and text.strip():
+            raw = [text.strip()]
         chunks: List[str] = []
         buff = ""
         for para in raw:
@@ -75,6 +77,8 @@ class LocalPolicyQA:
                     buff = ""
         if buff:
             chunks.append(buff)
+        if not chunks and text.strip():
+            chunks.append(text.strip()[:max_len])
         return chunks
 
     def _read_file(self, path: Path) -> str:
@@ -85,7 +89,9 @@ class LocalPolicyQA:
             if PdfReader is None:
                 return ""
             reader = PdfReader(str(path))
-            return "\n".join((page.extract_text() or "") for page in reader.pages)
+            content = "\n".join((page.extract_text() or "") for page in reader.pages)
+            print(f"[DEBUG] PDF读取完成: {path.name}, 文本长度={len(content)}")
+            return content
         if suffix == ".docx":
             if Document is None:
                 return ""
@@ -98,12 +104,14 @@ class LocalPolicyQA:
         all_chunks: List[Chunk] = []
         for path in docs:
             text = self._read_file(path)
+            print(f"[DEBUG] 文件读取: {path.name}, 文本长度={len(text)}")
             if not text.strip():
                 continue
             for chunk_text in self._split_text(text):
                 tokens = self._tokenize(chunk_text)
-                if not tokens:
-                    continue
+                if not tokens and chunk_text.strip():
+                    # 兜底：避免内容被完全过滤，至少保留一个占位 token 以进入索引
+                    tokens = ["__fallback__"]
                 all_chunks.append(
                     Chunk(
                         text=chunk_text,
