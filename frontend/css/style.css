@@ -1,0 +1,124 @@
+:root {
+  --bg: #f3f5f8;
+  --card: #ffffff;
+  --primary: #1f5fbf;
+  --text: #1c2430;
+  --muted: #5a6575;
+  --border: #dde3ec;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(30, 40, 60, 0.06);
+}
+
+.topbar {
+  margin: 16px;
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar h1 { margin: 0 0 8px; font-size: 24px; color: var(--primary); }
+.topbar p { margin: 0; color: var(--muted); }
+
+.status-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  margin: 0 16px 16px;
+}
+
+.sidebar, .content { padding: 16px; }
+.sidebar h2, .content h2 { margin-top: 0; }
+
+.sidebar ul {
+  padding-left: 18px;
+  line-height: 1.9;
+}
+
+button {
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+textarea {
+  width: 100%;
+  min-height: 100px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 8px 0 12px;
+}
+
+.quick-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.quick-btn {
+  background: #eef3fb;
+  color: var(--primary);
+  border: 1px solid #d6e1f5;
+}
+
+.muted { color: var(--muted); font-size: 14px; }
+
+.answer-panel {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.answer-text {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.source-item {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.source-item .file {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+}
