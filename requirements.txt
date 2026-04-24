@@ -1,0 +1,5 @@
+# 本仓库为本地离线演示版本，已内置最小依赖实现（src/flask, src/pypdf, src/docx）。
+# 如后续切换到正式环境，可替换为真实依赖：
+# flask
+# pypdf
+# python-docx
