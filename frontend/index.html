@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>内部规章制度智能问答助手</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header class="topbar card">
+      <div>
+        <h1>内部规章制度智能问答助手</h1>
+        <p>基于内部制度文档的本地知识库问答系统</p>
+      </div>
+      <div class="status-box">
+        <span>运行状态：<strong id="runStatus">本地运行</strong></span>
+        <span>知识库：<strong id="kbStatus">未建立索引</strong></span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar card">
+        <h2>知识库信息</h2>
+        <ul>
+          <li>文档目录：<code>docs/policies/</code></li>
+          <li>支持格式：PDF、DOCX、TXT、MD</li>
+          <li>当前文件数：<strong id="fileCount">0</strong></li>
+          <li>当前片段数：<strong id="chunkCount">0</strong></li>
+          <li>最近索引时间：<strong id="lastIndexedAt">暂无</strong></li>
+        </ul>
+        <button id="reindexBtn">重建索引</button>
+        <p id="reindexResult" class="muted"></p>
+      </aside>
+
+      <section class="content card">
+        <h2>问答检索</h2>
+        <label for="questionInput">请输入你的问题：</label>
+        <textarea id="questionInput" placeholder="例如：什么是公司的正式员工？"></textarea>
+
+        <div class="quick-questions">
+          <button class="quick-btn">什么是公司的正式员工？</button>
+          <button class="quick-btn">试用期是多久？</button>
+          <button class="quick-btn">迟到早退如何处罚？</button>
+          <button class="quick-btn">年假规则是什么？</button>
+        </div>
+
+        <button id="askBtn">提问</button>
+        <p id="askStatus" class="muted"></p>
+
+        <div class="answer-panel">
+          <h3>回答</h3>
+          <div id="answerText" class="answer-text">暂无回答</div>
+
+          <h3>引用来源</h3>
+          <div id="sources"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>
