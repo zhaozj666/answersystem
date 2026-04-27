@@ -1,62 +1,370 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>内部规章制度智能问答助手</title>
-    <link rel="stylesheet" href="/css/style.css" />
-  </head>
-  <body>
-    <header class="topbar card">
-      <div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>内部规章制度智能问答助手</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="loginView" class="login-screen">
+    <section class="login-card">
+      <div class="login-copy">
+        <p class="eyebrow">智能问答工作台</p>
         <h1>内部规章制度智能问答助手</h1>
-        <p>基于内部制度文档的本地知识库问答系统</p>
+        <p>登录后即可进行制度问答、查看个人历史记录，并按权限访问系统设置。</p>
       </div>
-      <div class="status-box">
-        <span>运行状态：<strong id="runStatus">本地运行</strong></span>
-        <span>知识库：<strong id="kbStatus">未建立索引</strong></span>
-      </div>
-    </header>
+      <form id="loginForm" class="login-form">
+        <label>
+          <span>手机号</span>
+          <input id="loginPhone" type="text" maxlength="11" placeholder="请输入手机号">
+        </label>
+        <label>
+          <span>密码</span>
+          <input id="loginPassword" type="password" placeholder="请输入密码">
+        </label>
+        <button class="primary-btn login-btn" type="submit">登录</button>
+        <p id="loginStatus" class="helper-text">请输入手机号和密码登录</p>
+      </form>
+    </section>
+  </div>
 
-    <main class="layout">
-      <aside class="sidebar card">
-        <h2>知识库信息</h2>
-        <ul>
-          <li>文档目录：<code>docs/policies/</code></li>
-          <li>支持格式：PDF、DOCX、TXT、MD</li>
-          <li>当前文件数：<strong id="fileCount">0</strong></li>
-          <li>当前片段数：<strong id="chunkCount">0</strong></li>
-          <li>最近索引时间：<strong id="lastIndexedAt">暂无</strong></li>
-        </ul>
-        <button id="reindexBtn">重建索引</button>
-        <p id="reindexResult" class="muted"></p>
-      </aside>
+  <div id="appView" class="app-shell hidden">
+    <aside class="app-rail" aria-label="应用导航">
+      <div class="brand-mark" aria-hidden="true">知</div>
+      <nav class="rail-nav">
+        <button class="rail-item active" type="button" data-view="qa">问答</button>
+        <button class="rail-item" type="button" data-view="center">我的</button>
+        <button id="settingsNav" class="rail-item hidden" type="button" data-view="settings">设置</button>
+      </nav>
+    </aside>
 
-      <section class="content card">
-        <h2>问答检索</h2>
-        <label for="questionInput">请输入你的问题：</label>
-        <textarea id="questionInput" placeholder="例如：什么是公司的正式员工？"></textarea>
-
-        <div class="quick-questions">
-          <button class="quick-btn">什么是公司的正式员工？</button>
-          <button class="quick-btn">试用期是多久？</button>
-          <button class="quick-btn">迟到早退如何处罚？</button>
-          <button class="quick-btn">年假规则是什么？</button>
+    <main class="workspace">
+      <header class="topbar">
+        <div class="topbar-main">
+          <p class="eyebrow">智能问答工作台</p>
+          <h1>内部规章制度智能问答助手</h1>
+          <p id="welcomeText">欢迎使用。</p>
         </div>
+        <div class="topbar-side">
+          <div id="userBadge" class="user-badge">访客</div>
+          <div class="runtime-card">
+            <span class="status-dot"></span>
+            <div>
+              <strong id="runtimeMode">本地检索</strong>
+              <span id="kbStatus">等待系统状态...</span>
+            </div>
+          </div>
+        </div>
+      </header>
 
-        <button id="askBtn">提问</button>
-        <p id="askStatus" class="muted"></p>
+      <section id="qaView" class="view-panel">
+        <div class="panel qa-layout">
+          <div class="panel-header">
+            <div>
+              <p class="section-label">问答</p>
+              <h2>向制度文档提问</h2>
+            </div>
+          </div>
 
-        <div class="answer-panel">
-          <h3>回答</h3>
-          <div id="answerText" class="answer-text">暂无回答</div>
+          <div class="info-strip">
+            <div class="info-item">
+              <span class="info-label">当前模式</span>
+              <strong id="qaModeText">本地检索摘要</strong>
+            </div>
+            <div class="info-item">
+              <span class="info-label">回答原则</span>
+              <strong>优先依据制度原文</strong>
+            </div>
+            <div class="info-item">
+              <span class="info-label">引用展示</span>
+              <strong>文件名 + 命中片段</strong>
+            </div>
+          </div>
 
-          <h3>引用来源</h3>
-          <div id="sources"></div>
+          <div class="question-box">
+            <div class="question-toolbar">
+              <span class="toolbar-title">问题输入</span>
+              <span class="toolbar-tip">建议尽量描述完整场景，例如岗位、费用类型、审批节点</span>
+            </div>
+            <textarea id="questionInput" placeholder="请输入制度问题，例如：什么是正式员工？"></textarea>
+            <div class="quick-questions">
+              <button class="quick-btn" type="button">什么是正式员工？</button>
+              <button class="quick-btn" type="button">试用期是多久？</button>
+              <button class="quick-btn" type="button">年假规则是什么？</button>
+              <button class="quick-btn" type="button">迟到早退如何处理？</button>
+            </div>
+            <div class="action-row">
+              <button id="askBtn" class="primary-btn" type="button">提问</button>
+              <span id="askStatus" class="helper-text">请输入问题后点击提问。</span>
+            </div>
+          </div>
+
+          <div class="answer-card">
+            <div class="answer-title">
+              <span class="answer-icon">A</span>
+              <h3>回答</h3>
+            </div>
+            <div id="answerText" class="answer-text empty">等待提问后显示答案。</div>
+          </div>
+
+          <div class="sources-card">
+            <div class="answer-title">
+              <span class="answer-icon secondary">引</span>
+              <h3>引用来源</h3>
+            </div>
+            <div id="sources" class="sources-list">
+              <p class="muted">暂无引用来源</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="centerView" class="view-panel hidden">
+        <div class="stack-layout center-stack">
+          <section class="panel overview-panel">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">我的</p>
+                <h2>账号概览</h2>
+                <p class="panel-subtitle">这里集中展示当前登录身份、账号维护入口和个人问答历史。</p>
+              </div>
+            </div>
+
+            <dl class="meta-list overview-list">
+              <div>
+                <dt>当前手机号</dt>
+                <dd id="profilePhone">-</dd>
+              </div>
+              <div>
+                <dt>当前角色</dt>
+                <dd id="profileRole">-</dd>
+              </div>
+              <div>
+                <dt>登录状态</dt>
+                <dd>当前账号已在本地会话中保持登录。</dd>
+              </div>
+            </dl>
+
+            <div class="inline-actions">
+              <button id="logoutBtn" class="danger-btn" type="button">退出登录</button>
+              <p id="profileStatus" class="helper-text">你可以在下方维护个人信息，并查看自己的搜索历史。</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">账号维护</p>
+                <h2>安全与信息</h2>
+                <p class="panel-subtitle">修改手机号或密码后，将直接影响后续登录方式。</p>
+              </div>
+            </div>
+
+            <div class="section-stack">
+              <form id="profileForm" class="settings-form">
+                <label>
+                  <span>新手机号</span>
+                  <input id="profilePhoneInput" type="text" maxlength="11" placeholder="修改登录手机号">
+                </label>
+                <button class="secondary-btn section-btn" type="submit">更新手机号</button>
+              </form>
+
+              <form id="passwordForm" class="settings-form section-block">
+                <label>
+                  <span>当前密码</span>
+                  <input id="currentPasswordInput" type="password" placeholder="请输入当前密码">
+                </label>
+                <label>
+                  <span>新密码</span>
+                  <input id="newPasswordInput" type="password" placeholder="请输入新密码">
+                </label>
+                <button class="secondary-btn section-btn" type="submit">修改密码</button>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">我的历史</p>
+                <h2>搜索记录</h2>
+                <p class="panel-subtitle">点击任意一条记录，可以直接回填到问答区继续查看。</p>
+              </div>
+            </div>
+            <div id="historyList" class="history-list">
+              <p class="muted">暂无历史记录</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="settingsView" class="view-panel hidden">
+        <div class="stack-layout settings-stack">
+          <section class="panel overview-panel">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">系统概览</p>
+                <h2>设置总览</h2>
+                <p class="panel-subtitle">管理员可在这里配置模型、维护知识库索引，并管理用户权限。</p>
+              </div>
+              <span id="llmBadge" class="soft-badge muted-badge">关闭</span>
+            </div>
+
+            <dl class="meta-list overview-list">
+              <div>
+                <dt>当前模型状态</dt>
+                <dd id="settingsRuntimeText">本地检索模式</dd>
+              </div>
+              <div>
+                <dt>知识库状态</dt>
+                <dd>管理员可以在本页管理模型、索引和账号权限。</dd>
+              </div>
+              <div>
+                <dt>管理权限</dt>
+                <dd>仅管理员可见</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">模型设置</p>
+                <h2>LLM 生成</h2>
+                <p class="panel-subtitle">启用后，系统会基于检索到的引用片段生成更自然的回答。</p>
+              </div>
+            </div>
+
+            <form id="settingsForm" class="settings-form">
+              <label class="toggle-row">
+                <input id="llmEnabled" type="checkbox">
+                <span>启用大模型生成答案</span>
+              </label>
+
+              <label>
+                <span>模型来源</span>
+                <select id="providerSelect">
+                  <option value="ollama">Ollama 本地免费</option>
+                  <option value="openai_compatible">OpenAI-compatible 接口</option>
+                </select>
+              </label>
+
+              <label>
+                <span>API 地址</span>
+                <input id="baseUrlInput" type="text" placeholder="http://127.0.0.1:11434">
+              </label>
+
+              <label>
+                <span>模型名称</span>
+                <input id="modelInput" type="text" placeholder="qwen2.5:7b">
+              </label>
+
+              <label>
+                <span>API Key</span>
+                <input id="apiKeyInput" type="password" placeholder="本地 Ollama 可留空">
+              </label>
+
+              <div class="settings-row">
+                <label>
+                  <span>温度</span>
+                  <input id="temperatureInput" type="number" min="0" max="2" step="0.1" value="0.2">
+                </label>
+                <label>
+                  <span>引用数</span>
+                  <input id="topKInput" type="number" min="1" max="10" step="1" value="5">
+                </label>
+              </div>
+
+              <button class="secondary-btn section-btn" type="submit">保存模型设置</button>
+              <p id="settingsStatus" class="helper-text">不启用时，系统仅返回本地向量检索摘要。</p>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">知识库设置</p>
+                <h2>索引状态</h2>
+                <p class="panel-subtitle">文档更新后，请及时重建索引，确保问答结果能命中新内容。</p>
+              </div>
+            </div>
+
+            <dl class="meta-list">
+              <div>
+                <dt>文档目录</dt>
+                <dd>docs/policies/</dd>
+              </div>
+              <div>
+                <dt>当前文件数</dt>
+                <dd><span id="fileCount">0</span> 个</dd>
+              </div>
+              <div>
+                <dt>当前片段数</dt>
+                <dd><span id="chunkCount">0</span> 个</dd>
+              </div>
+              <div>
+                <dt>最近索引时间</dt>
+                <dd id="lastIndexedAt">暂无</dd>
+              </div>
+            </dl>
+
+            <button id="reindexBtn" class="primary-btn section-btn" type="button">重建索引</button>
+            <p id="reindexResult" class="helper-text">文档更新后，管理员可以在这里重建索引。</p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">账号管理</p>
+                <h2>用户与权限</h2>
+                <p class="panel-subtitle">管理员可以新增账号、指定角色，并对用户密码进行重置。</p>
+              </div>
+            </div>
+
+            <div class="section-stack">
+              <form id="createAccountForm" class="settings-form">
+                <label>
+                  <span>手机号</span>
+                  <input id="newAccountPhone" type="text" maxlength="11" placeholder="新用户手机号">
+                </label>
+                <label>
+                  <span>初始密码</span>
+                  <input id="newAccountPassword" type="password" placeholder="至少 6 位">
+                </label>
+                <label>
+                  <span>角色</span>
+                  <select id="newAccountRole">
+                    <option value="user">普通用户</option>
+                    <option value="admin">管理员</option>
+                  </select>
+                </label>
+                <button class="secondary-btn section-btn" type="submit">创建账号</button>
+              </form>
+
+              <form id="resetPasswordForm" class="settings-form section-block">
+                <label>
+                  <span>重置手机号</span>
+                  <input id="resetPhone" type="text" maxlength="11" placeholder="输入要重置的手机号">
+                </label>
+                <label>
+                  <span>新密码</span>
+                  <input id="resetPassword" type="password" placeholder="输入新密码">
+                </label>
+                <button class="secondary-btn section-btn" type="submit">重置密码</button>
+              </form>
+            </div>
+
+            <p id="adminStatus" class="helper-text">默认管理员：15100000000</p>
+            <div id="accountsList" class="history-list section-gap">
+              <p class="muted">暂无账号数据</p>
+            </div>
+          </section>
         </div>
       </section>
     </main>
+  </div>
 
-    <script src="/js/app.js"></script>
-  </body>
+  <script src="/js/app.js"></script>
+</body>
 </html>
