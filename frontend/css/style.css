@@ -157,15 +157,15 @@ button {
 .workspace {
   min-width: 0;
   width: 100%;
-  padding: 18px 20px;
+  padding: 18px 24px;
 }
 
 .topbar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 14px;
+  gap: 22px;
+  margin-bottom: 16px;
   width: 100%;
 }
 
@@ -184,18 +184,18 @@ button {
 
 .topbar h1 {
   margin: 0;
-  font-size: 28px;
-  line-height: 1.16;
+  font-size: 32px;
+  line-height: 1.14;
 }
 
 .topbar p:last-child {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   color: var(--muted);
 }
 
 .topbar-side {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   justify-items: end;
 }
 
@@ -220,10 +220,10 @@ button {
 }
 
 .runtime-card {
-  min-width: 210px;
+  min-width: 214px;
   max-width: 100%;
-  padding: 14px 16px;
-  border-radius: 16px;
+  padding: 18px 16px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -248,15 +248,15 @@ button {
 }
 
 .panel {
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 20px;
+  padding: 18px;
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .panel-header h2 {
@@ -359,19 +359,19 @@ button {
 }
 
 .question-box {
-  padding: 14px;
-  border-radius: 16px;
+  padding: 16px 14px 14px;
+  border-radius: 18px;
   border: 1px solid var(--border);
   background: var(--panel-soft);
 }
 
 .info-strip {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .info-item {
-  padding: 14px;
+  padding: 16px 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
@@ -506,6 +506,7 @@ select:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 2px;
 }
 
 .quick-btn {
@@ -552,7 +553,7 @@ select:focus {
 .answer-card,
 .sources-card {
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid var(--border);
   background: #fff;
 }
@@ -589,8 +590,8 @@ select:focus {
 .answer-text {
   min-height: 90px;
   white-space: pre-wrap;
-  line-height: 1.8;
-  padding: 14px;
+  line-height: 1.9;
+  padding: 16px 14px;
   border-radius: 14px;
   border: 1px solid #d9e7f6;
   background: #f7fbff;
@@ -635,6 +636,21 @@ select:focus {
 .account-item {
   display: grid;
   gap: 6px;
+}
+
+#centerView .panel,
+#settingsView .panel {
+  background: rgba(255, 255, 255, 0.96);
+}
+
+#centerView .panel-header,
+#settingsView .panel-header {
+  margin-bottom: 16px;
+}
+
+#centerView .meta-list div,
+#settingsView .meta-list div {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
 .section-gap {
@@ -711,7 +727,7 @@ select:focus {
   }
 
   .topbar h1 {
-    font-size: 24px;
+    font-size: 26px;
   }
 
   .panel-header,
