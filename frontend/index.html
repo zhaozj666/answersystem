@@ -62,7 +62,6 @@
         <div class="panel qa-layout">
           <div class="panel-header">
             <div>
-              <p class="section-label">问答</p>
               <h2>向制度文档提问</h2>
             </div>
           </div>
@@ -73,14 +72,25 @@
               <strong id="qaModeText">本地检索摘要</strong>
             </div>
             <div class="info-item">
-              <span class="info-label">回答原则</span>
-              <strong>优先依据制度原文</strong>
+              <span class="info-label">检索方式</span>
+              <strong id="qaRetrievalText">fallback 轻量检索</strong>
             </div>
             <div class="info-item">
-              <span class="info-label">引用展示</span>
-              <strong>文件名 + 命中片段</strong>
+              <span class="info-label">Embedding 模型</span>
+              <strong id="qaEmbeddingModelText">text-embedding-v4</strong>
             </div>
           </div>
+          <div class="info-strip qa-status-strip">
+            <div class="info-item">
+              <span class="info-label">Embedding 质量</span>
+              <strong id="qaEmbeddingQualityText">fallback</strong>
+            </div>
+            <div class="info-item info-item-wide">
+              <span class="info-label">引用展示</span>
+              <strong>文件名 + 章节路径 + 命中片段</strong>
+            </div>
+          </div>
+          <p id="qaEmbeddingNotice" class="helper-text qa-embedding-notice hidden">当前为轻量 fallback 检索模式，效果可能较弱，建议配置真实 Embedding。</p>
 
           <div class="question-box">
             <div class="question-toolbar">
@@ -125,7 +135,7 @@
           <section class="panel overview-panel">
             <div class="panel-header">
               <div>
-                <p class="section-label">我的</p>
+                <p class="section-label"></p>
                 <h2>账号概览</h2>
                 <p class="panel-subtitle">这里集中展示当前登录身份、账号维护入口和个人问答历史。</p>
               </div>
@@ -152,48 +162,54 @@
             </div>
           </section>
 
-          <section class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="section-label">账号维护</p>
-                <h2>安全与信息</h2>
-                <p class="panel-subtitle">修改手机号或密码后，将直接影响后续登录方式。</p>
-              </div>
+          <section class="panel center-tabs-panel">
+            <div class="center-tabs" role="tablist" aria-label="我的页面选项卡">
+              <button class="center-tab active" type="button" data-center-tab="profile" role="tab" aria-selected="true">安全与信息</button>
+              <button class="center-tab" type="button" data-center-tab="history" role="tab" aria-selected="false">搜索历史</button>
             </div>
 
-            <div class="section-stack">
-              <form id="profileForm" class="settings-form">
-                <label>
-                  <span>新手机号</span>
-                  <input id="profilePhoneInput" type="text" maxlength="11" placeholder="修改登录手机号">
-                </label>
-                <button class="secondary-btn section-btn" type="submit">更新手机号</button>
-              </form>
+            <div class="center-tab-panels">
+              <section class="center-tab-panel" data-center-panel="profile">
+                <div class="panel-header">
+                  <div>
+                    <p class="panel-subtitle">修改手机号或密码后，将直接影响后续登录方式。</p>
+                  </div>
+                </div>
 
-              <form id="passwordForm" class="settings-form section-block">
-                <label>
-                  <span>当前密码</span>
-                  <input id="currentPasswordInput" type="password" placeholder="请输入当前密码">
-                </label>
-                <label>
-                  <span>新密码</span>
-                  <input id="newPasswordInput" type="password" placeholder="请输入新密码">
-                </label>
-                <button class="secondary-btn section-btn" type="submit">修改密码</button>
-              </form>
-            </div>
-          </section>
+                <div class="section-stack">
+                  <form id="profileForm" class="settings-form">
+                    <label>
+                      <span>新手机号</span>
+                      <input id="profilePhoneInput" type="text" maxlength="11" placeholder="修改登录手机号">
+                    </label>
+                    <button class="secondary-btn section-btn" type="submit">更新手机号</button>
+                  </form>
 
-          <section class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="section-label">我的历史</p>
-                <h2>搜索记录</h2>
-                <p class="panel-subtitle">点击任意一条记录，可以直接回填到问答区继续查看。</p>
-              </div>
-            </div>
-            <div id="historyList" class="history-list">
-              <p class="muted">暂无历史记录</p>
+                  <form id="passwordForm" class="settings-form section-block">
+                    <label>
+                      <span>当前密码</span>
+                      <input id="currentPasswordInput" type="password" placeholder="请输入当前密码">
+                    </label>
+                    <label>
+                      <span>新密码</span>
+                      <input id="newPasswordInput" type="password" placeholder="请输入新密码">
+                    </label>
+                    <button class="secondary-btn section-btn" type="submit">修改密码</button>
+                  </form>
+                </div>
+              </section>
+
+              <section class="center-tab-panel hidden" data-center-panel="history">
+                <div class="panel-header">
+                  <div>
+                    <p class="panel-subtitle">点击任意一条记录，可以直接回填到问答区继续查看。</p>
+                  </div>
+                </div>
+                <p class="panel-tip">仅展示最近 5 条搜索历史。</p>
+                <div id="historyList" class="history-list">
+                  <p class="muted">暂无历史记录</p>
+                </div>
+              </section>
             </div>
           </section>
         </div>
@@ -204,7 +220,6 @@
           <section class="panel overview-panel">
             <div class="panel-header">
               <div>
-                <p class="section-label">系统概览</p>
                 <h2>设置总览</h2>
                 <p class="panel-subtitle">管理员可在这里配置模型、维护知识库索引，并管理用户权限。</p>
               </div>
@@ -227,137 +242,269 @@
             </dl>
           </section>
 
-          <section class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="section-label">模型设置</p>
-                <h2>LLM 生成</h2>
-                <p class="panel-subtitle">启用后，系统会基于检索到的引用片段生成更自然的回答。</p>
-              </div>
+          <section class="panel settings-tabs-panel">
+            <div class="settings-tabs" role="tablist" aria-label="系统设置选项卡">
+              <button class="settings-tab active" type="button" data-settings-tab="knowledge" role="tab" aria-selected="true">知识库设置</button>
+              <button class="settings-tab" type="button" data-settings-tab="models" role="tab" aria-selected="false">模型设置</button>
+              <button class="settings-tab" type="button" data-settings-tab="users" role="tab" aria-selected="false">用户权限</button>
             </div>
 
-            <form id="settingsForm" class="settings-form">
-              <label class="toggle-row">
-                <input id="llmEnabled" type="checkbox">
-                <span>启用大模型生成答案</span>
-              </label>
+            <div class="settings-tab-panels">
+              <section class="settings-tab-panel" data-settings-panel="knowledge">
+                <div class="panel-header">
+                  <div class="settings-tab-description">
+                    <p class="panel-subtitle">文档更新后，请及时重建索引，确保问答结果能命中新内容。</p>
+                  </div>
+                </div>
 
-              <label>
-                <span>模型来源</span>
-                <select id="providerSelect">
-                  <option value="ollama">Ollama 本地免费</option>
-                  <option value="openai_compatible">OpenAI-compatible 接口</option>
-                </select>
-              </label>
+                <dl class="meta-list knowledge-meta-list">
+                  <div>
+                    <dt>文档目录</dt>
+                    <dd>docs/policies/</dd>
+                  </div>
+                  <div>
+                    <dt>支持格式</dt>
+                    <dd>PDF / DOCX / TXT / MD</dd>
+                  </div>
+                  <div>
+                    <dt>当前文件数</dt>
+                    <dd><span id="fileCount">0</span> 个</dd>
+                  </div>
+                  <div>
+                    <dt>当前片段数</dt>
+                    <dd><span id="chunkCount">0</span> 个</dd>
+                  </div>
+                  <div>
+                    <dt>最近索引时间</dt>
+                    <dd id="lastIndexedAt">暂无</dd>
+                  </div>
+                </dl>
 
-              <label>
-                <span>API 地址</span>
-                <input id="baseUrlInput" type="text" placeholder="http://127.0.0.1:11434">
-              </label>
+                <button id="reindexBtn" class="primary-btn section-btn" type="button">重建索引</button>
+                <p id="reindexResult" class="helper-text">文档更新后，管理员可以在这里重建索引。</p>
+              </section>
 
-              <label>
-                <span>模型名称</span>
-                <input id="modelInput" type="text" placeholder="qwen2.5:7b">
-              </label>
+              <section class="settings-tab-panel hidden" data-settings-panel="models">
+                <div class="panel-header">
+                  <div class="settings-tab-description">
+                    <p class="panel-subtitle">大模型用于把检索到的制度内容总结成更自然的回答。不配置大模型时，系统使用本地检索回答；切换模型不需要重建索引。</p>
+                  </div>
+                </div>
 
-              <label>
-                <span>API Key</span>
-                <input id="apiKeyInput" type="password" placeholder="本地 Ollama 可留空">
-              </label>
+                <form id="settingsForm" class="settings-form">
+                  <div class="settings-note">
+                    <div class="mode-banner">
+                      <span class="info-label">当前回答模式</span>
+                      <strong id="settingsModeBanner">本地检索模式</strong>
+                    </div>
+                    <div class="note-list">
+                      <p>GPT：回答质量高，需要 OpenAI API Key。</p>
+                      <p>DeepSeek：成本低，中文/代码能力较好，需要 DeepSeek API Key。</p>
+                      <p>Qwen：适合中文制度问答，需要通义千问/阿里云 API Key。</p>
+                      <p>Ollama：本地离线运行，需要本机安装 Ollama。</p>
+                      <p>低内存推荐：8GB 内存优先使用 all-minilm + qwen2.5:1.5b，或直接使用本地检索。</p>
+                      <p>低内存推荐：16GB 内存可使用 all-minilm / qwen3-embedding:0.6b + qwen2.5:3b。</p>
+                      <p>低内存电脑不建议默认使用 7B 以上模型。</p>
+                    </div>
+                  </div>
 
-              <div class="settings-row">
-                <label>
-                  <span>温度</span>
-                  <input id="temperatureInput" type="number" min="0" max="2" step="0.1" value="0.2">
-                </label>
-                <label>
-                  <span>引用数</span>
-                  <input id="topKInput" type="number" min="1" max="10" step="1" value="5">
-                </label>
-              </div>
+                  <section class="embedding-config-card">
+                    <div class="model-card-head">
+                      <div>
+                        <h3>Embedding 设置</h3>
+                        <p>Embedding 用于生成文档向量，决定检索准确性。回答模型用于生成最终回答，二者可以不同。推荐中文制度问答使用 Qwen text-embedding-v4。</p>
+                      </div>
+                      <label class="mini-toggle">
+                        <input id="embeddingEnabledInput" type="checkbox">
+                        <span>启用</span>
+                      </label>
+                    </div>
+                    <div class="embedding-grid">
+                      <label>
+                        <span>provider</span>
+                        <select id="embeddingProviderInput">
+                          <option value="qwen">Qwen</option>
+                          <option value="openai_compatible">OpenAI-compatible</option>
+                          <option value="openai">OpenAI</option>
+                        </select>
+                      </label>
+                      <label>
+                        <span>base_url</span>
+                        <input id="embeddingBaseUrlInput" type="text" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1">
+                      </label>
+                      <label>
+                        <span>api_key</span>
+                        <input id="embeddingApiKeyInput" type="password" placeholder="请输入 Embedding API Key">
+                      </label>
+                      <label>
+                        <span>model</span>
+                        <input id="embeddingModelInput" type="text" placeholder="text-embedding-v4">
+                      </label>
+                    </div>
+                  </section>
 
-              <button class="secondary-btn section-btn" type="submit">保存模型设置</button>
-              <p id="settingsStatus" class="helper-text">不启用时，系统仅返回本地向量检索摘要。</p>
-            </form>
-          </section>
+                  <div class="model-grid">
+                    <section class="model-card" data-model="gpt">
+                      <div class="model-card-head">
+                        <div>
+                          <h3>GPT（云）</h3>
+                          <p>适合追求整体回答质量的场景。</p>
+                        </div>
+                        <label class="mini-toggle">
+                          <input id="gptEnabledInput" type="checkbox">
+                          <span>启用</span>
+                        </label>
+                      </div>
+                      <label>
+                        <span>base_url</span>
+                        <input id="gptBaseUrlInput" type="text" placeholder="https://api.openai.com/v1">
+                      </label>
+                      <label>
+                        <span>api_key</span>
+                        <input id="gptApiKeyInput" type="password" placeholder="请输入 OpenAI API Key">
+                      </label>
+                      <label>
+                        <span>model</span>
+                        <input id="gptModelInput" type="text" placeholder="gpt-4o-mini">
+                      </label>
+                    </section>
 
-          <section class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="section-label">知识库设置</p>
-                <h2>索引状态</h2>
-                <p class="panel-subtitle">文档更新后，请及时重建索引，确保问答结果能命中新内容。</p>
-              </div>
-            </div>
+                    <section class="model-card" data-model="deepseek">
+                      <div class="model-card-head">
+                        <div>
+                          <h3>DeepSeek（云）</h3>
+                          <p>成本较低，中文与代码表现较好。</p>
+                        </div>
+                        <label class="mini-toggle">
+                          <input id="deepseekEnabledInput" type="checkbox">
+                          <span>启用</span>
+                        </label>
+                      </div>
+                      <label>
+                        <span>base_url</span>
+                        <input id="deepseekBaseUrlInput" type="text" placeholder="https://api.deepseek.com/v1">
+                      </label>
+                      <label>
+                        <span>api_key</span>
+                        <input id="deepseekApiKeyInput" type="password" placeholder="请输入 DeepSeek API Key">
+                      </label>
+                      <label>
+                        <span>model</span>
+                        <input id="deepseekModelInput" type="text" placeholder="deepseek-chat">
+                      </label>
+                    </section>
 
-            <dl class="meta-list">
-              <div>
-                <dt>文档目录</dt>
-                <dd>docs/policies/</dd>
-              </div>
-              <div>
-                <dt>当前文件数</dt>
-                <dd><span id="fileCount">0</span> 个</dd>
-              </div>
-              <div>
-                <dt>当前片段数</dt>
-                <dd><span id="chunkCount">0</span> 个</dd>
-              </div>
-              <div>
-                <dt>最近索引时间</dt>
-                <dd id="lastIndexedAt">暂无</dd>
-              </div>
-            </dl>
+                    <section class="model-card" data-model="qwen">
+                      <div class="model-card-head">
+                        <div>
+                          <h3>Qwen（云）</h3>
+                          <p>适合中文制度问答与内部知识总结。</p>
+                        </div>
+                        <label class="mini-toggle">
+                          <input id="qwenEnabledInput" type="checkbox">
+                          <span>启用</span>
+                        </label>
+                      </div>
+                      <label>
+                        <span>base_url</span>
+                        <input id="qwenBaseUrlInput" type="text" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1">
+                      </label>
+                      <label>
+                        <span>api_key</span>
+                        <input id="qwenApiKeyInput" type="password" placeholder="请输入通义千问 / 阿里云 API Key">
+                      </label>
+                      <label>
+                        <span>model</span>
+                        <input id="qwenModelInput" type="text" placeholder="qwen-plus">
+                      </label>
+                    </section>
 
-            <button id="reindexBtn" class="primary-btn section-btn" type="button">重建索引</button>
-            <p id="reindexResult" class="helper-text">文档更新后，管理员可以在这里重建索引。</p>
-          </section>
+                    <section class="model-card" data-model="ollama">
+                      <div class="model-card-head">
+                        <div>
+                          <h3>Ollama（本地）</h3>
+                          <p>本机离线运行，适合内网或无外网环境。</p>
+                        </div>
+                        <label class="mini-toggle">
+                          <input id="ollamaEnabledInput" type="checkbox">
+                          <span>启用</span>
+                        </label>
+                      </div>
+                      <label>
+                        <span>base_url</span>
+                        <input id="ollamaBaseUrlInput" type="text" placeholder="http://127.0.0.1:11434/v1">
+                      </label>
+                      <label>
+                        <span>api_key</span>
+                        <input id="ollamaApiKeyInput" type="password" placeholder="默认可填写 ollama">
+                      </label>
+                      <label>
+                        <span>model</span>
+                        <input id="ollamaModelInput" type="text" placeholder="qwen2.5:3b">
+                      </label>
+                    </section>
+                  </div>
 
-          <section class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="section-label">账号管理</p>
-                <h2>用户与权限</h2>
-                <p class="panel-subtitle">管理员可以新增账号、指定角色，并对用户密码进行重置。</p>
-              </div>
-            </div>
+                  <div class="settings-guide">
+                    <p>切换说明：填写模型配置，开启 enabled，保存配置，回到问答页即可生效。</p>
+                    <p>只有文档更新才需要重建索引，切换模型不需要重建索引。</p>
+                  </div>
 
-            <div class="section-stack">
-              <form id="createAccountForm" class="settings-form">
-                <label>
-                  <span>手机号</span>
-                  <input id="newAccountPhone" type="text" maxlength="11" placeholder="新用户手机号">
-                </label>
-                <label>
-                  <span>初始密码</span>
-                  <input id="newAccountPassword" type="password" placeholder="至少 6 位">
-                </label>
-                <label>
-                  <span>角色</span>
-                  <select id="newAccountRole">
-                    <option value="user">普通用户</option>
-                    <option value="admin">管理员</option>
-                  </select>
-                </label>
-                <button class="secondary-btn section-btn" type="submit">创建账号</button>
-              </form>
+                  <div class="settings-row">
+                    <label>
+                      <span class="field-label">温度
+                        <span class="tooltip-wrap" tabindex="0" aria-label="温度说明">
+                          <span class="tooltip-trigger" aria-hidden="true">?</span>
+                          <span class="tooltip-bubble" role="tooltip">温度越低，回答越稳定、越保守；温度越高，回答越灵活，但也更容易发散。</span>
+                        </span>
+                      </span>
+                      <input id="temperatureInput" type="number" min="0" max="2" step="0.1" value="0.2">
+                    </label>
+                  </div>
 
-              <form id="resetPasswordForm" class="settings-form section-block">
-                <label>
-                  <span>重置手机号</span>
-                  <input id="resetPhone" type="text" maxlength="11" placeholder="输入要重置的手机号">
-                </label>
-                <label>
-                  <span>新密码</span>
-                  <input id="resetPassword" type="password" placeholder="输入新密码">
-                </label>
-                <button class="secondary-btn section-btn" type="submit">重置密码</button>
-              </form>
-            </div>
+                  <div class="settings-row">
+                    <label>
+                      <span class="field-label">最大上下文片段数
+                        <span class="tooltip-wrap" tabindex="0" aria-label="最大上下文片段数说明">
+                          <span class="tooltip-trigger" aria-hidden="true">?</span>
+                          <span class="tooltip-bubble" role="tooltip">表示每次问答最多检索并送入模型的片段数量。数值越大，参考范围越广，但速度可能变慢。</span>
+                        </span>
+                      </span>
+                      <input id="maxContextSourcesInput" type="number" min="1" max="10" step="1" value="3">
+                    </label>
+                    <label>
+                      <span>单片段最大字数</span>
+                      <input id="maxSnippetCharsInput" type="number" min="100" max="2000" step="50" value="500">
+                    </label>
+                  </div>
 
-            <p id="adminStatus" class="helper-text">默认管理员：15100000000</p>
-            <div id="accountsList" class="history-list section-gap">
-              <p class="muted">暂无账号数据</p>
+                  <div class="settings-row">
+                    <label>
+                      <span>总上下文最大字数</span>
+                      <input id="maxContextCharsInput" type="number" min="300" max="5000" step="100" value="1500">
+                    </label>
+                  </div>
+
+                  <button class="secondary-btn section-btn" type="submit">保存模型设置</button>
+                  <p id="settingsStatus" class="helper-text">不启用任何模型时，系统仅返回本地向量检索摘要。</p>
+                </form>
+              </section>
+
+              <section class="settings-tab-panel hidden" data-settings-panel="users">
+                <div class="panel-header">
+                  <div class="settings-tab-description">
+                    <p class="panel-subtitle">当前系统为本地单机模式，后续将逐步扩展更细粒度的账号和文档权限能力。</p>
+                  </div>
+                </div>
+
+                <div class="settings-note">
+                  <div class="note-list">
+                    <p>当前版本以本地单机使用为主，适合内部演示、知识库试运行和管理员集中维护。</p>
+                    <p>后续计划支持：管理员、普通用户、只读用户、按文档或目录分配访问权限。</p>
+                    <p>当前界面先保留为权限规划占位区，后续再接入正式的用户角色与文档权限管理。</p>
+                  </div>
+                </div>
+              </section>
             </div>
           </section>
         </div>

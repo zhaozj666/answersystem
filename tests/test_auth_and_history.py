@@ -9,6 +9,11 @@ from backend.services.auth_service import AuthService
 from backend.services.history_service import HistoryService
 
 
+class FakeLLMClient:
+    def generate_answer(self, question, context, sources, settings):
+        return "这是模型增强后的回答。"
+
+
 class AuthServiceTest(unittest.TestCase):
     def test_bootstraps_admin_account(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -88,6 +93,20 @@ class AppAuthFlowTest(unittest.TestCase):
                 testing=True,
             )
             app.index_service.reindex()
+            app.qa_service.llm_client = FakeLLMClient()
+            app.settings_service.save(
+                {
+                    "models": {
+                        "ollama": {
+                            "provider_name": "ollama",
+                            "base_url": "http://127.0.0.1:11434/v1",
+                            "api_key": "ollama",
+                            "model": "qwen2.5:3b",
+                            "enabled": True,
+                        }
+                    }
+                }
+            )
             client = app.test_client()
 
             unauth_res = client.post("/api/ask", json={"question": "什么是正式员工？"})
@@ -99,6 +118,17 @@ class AppAuthFlowTest(unittest.TestCase):
             )
             ask_res = client.post("/api/ask", json={"question": "什么是正式员工？"})
             self.assertEqual(ask_res.status_code, 200)
+            ask_data = ask_res.get_json()
+            self.assertIn("mode", ask_data)
+            self.assertIn("mode_label", ask_data)
+            self.assertIn("generation_type", ask_data)
+            self.assertIn("used_model", ask_data)
+            self.assertIn("fallback_reason", ask_data)
+            self.assertEqual(ask_data["mode"], "ollama")
+            self.assertEqual(ask_data["mode_label"], "Ollama本地增强")
+            self.assertEqual(ask_data["generation_type"], "llm")
+            self.assertEqual(ask_data["used_model"], "qwen2.5:3b")
+            self.assertEqual(ask_data["answer"], "这是模型增强后的回答。")
 
             history_res = client.get("/api/history")
             self.assertEqual(history_res.status_code, 200)

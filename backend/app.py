@@ -10,12 +10,14 @@ from flask_cors import CORS
 
 try:
     from .services.auth_service import AuthError, AuthService
+    from .services.embedding_service import EmbeddingService
     from .services.history_service import HistoryService
     from .services.index_service import IndexService
     from .services.qa_service import QAService
     from .services.settings_service import SettingsService
 except ImportError:  # pragma: no cover
     from services.auth_service import AuthError, AuthService
+    from services.embedding_service import EmbeddingService
     from services.history_service import HistoryService
     from services.index_service import IndexService
     from services.qa_service import QAService
@@ -154,6 +156,8 @@ def create_app(
     @app.post("/api/reindex")
     @require_admin
     def reindex(user):
+        settings = app.settings_service.load(mask_secret=False)
+        app.index_service.set_embedding_service(EmbeddingService.from_settings(settings.get("embedding")))
         result = app.index_service.reindex()
         return jsonify(result)
 
@@ -166,7 +170,10 @@ def create_app(
     @require_admin
     def save_settings(user):
         payload = request.get_json(silent=True) or {}
-        return jsonify(app.settings_service.save(payload))
+        try:
+            return jsonify(app.settings_service.save(payload))
+        except ValueError as exc:
+            return error(str(exc), 400)
 
     @app.get("/api/admin/accounts")
     @require_admin
@@ -208,6 +215,7 @@ def create_app(
             return error("问题不能为空。", 400)
 
         settings = app.settings_service.load(mask_secret=False)
+        app.index_service.set_embedding_service(EmbeddingService.from_settings(settings.get("embedding")))
         result = app.qa_service.ask(question, settings)
         app.history_service.add_entry(
             str(user["phone"]),
