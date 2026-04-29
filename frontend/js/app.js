@@ -1,6 +1,9 @@
+// 前端入口脚本：负责页面视图切换、表单交互、与后端 API 通信，以及问答结果与历史记录渲染。
+// apiBase 可用于部署时配置后端接口地址，当前保持空字符串表示同源请求。
 const apiBase = "";
 const HISTORY_VISIBLE_LIMIT = 5;
 
+// 结果展示标签：将后端返回的状态码映射为中文显示文本。
 const MODE_LABELS = {
   extractive: "本地检索模式",
   gpt: "GPT增强",
@@ -148,6 +151,7 @@ const modelFields = {
   },
 };
 
+// 下面这些元素都是页面上的输入控件与显示区域，通过 ID 绑定到脚本中，方便后续控制它们的状态和内容。
 const embeddingFields = {
   provider: document.getElementById("embeddingProviderInput"),
   baseUrl: document.getElementById("embeddingBaseUrlInput"),
@@ -159,6 +163,7 @@ const embeddingFields = {
 let currentUser = null;
 let currentSettings = null;
 
+// 切换设置页选项卡：控制模型、知识库、用户权限三栏之间的显示。
 function activateSettingsTab(tabName) {
   settingsTabs.forEach((button) => {
     const active = button.dataset.settingsTab === tabName;
@@ -170,6 +175,7 @@ function activateSettingsTab(tabName) {
   });
 }
 
+// 切换“我的”页面选项卡：安全信息与搜索历史之间的展示切换。
 function activateCenterTab(tabName) {
   centerTabs.forEach((button) => {
     const active = button.dataset.centerTab === tabName;
@@ -181,6 +187,7 @@ function activateCenterTab(tabName) {
   });
 }
 
+// 安全渲染：将文本转义为 HTML 转义字符，避免 XSS 或不安全显示。
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -197,15 +204,18 @@ function formatTime(iso) {
   return date.toLocaleString("zh-CN", { hour12: false });
 }
 
+// 设置回答区文本，并根据是否为空调整样式。
 function setAnswer(text, isEmpty = false) {
   answerText.textContent = text;
   answerText.classList.toggle("empty", isEmpty);
 }
 
+// 统一解析后端返回错误信息，默认回退到传入的 fallback 文本。
 function getJsonError(data, fallback) {
   return data && data.error ? data.error : fallback;
 }
 
+// 将后端模式标识转换为界面显示标签。
 function getModeLabel(mode) {
   return MODE_LABELS[mode] || "本地检索模式";
 }
@@ -222,6 +232,7 @@ function getEmbeddingQualityLabel(quality) {
   return EMBEDDING_QUALITY_LABELS[quality] || EMBEDDING_QUALITY_LABELS.fallback;
 }
 
+// 根据当前问答结果构建底部状态说明，展示模型、检索方式、Embedding 等信息。
 function getEmbeddingNoticeText(data = {}) {
   if (data.embedding_quality !== "fallback") return "";
   return "当前为轻量 fallback 检索，效果可能较弱，建议配置真实 Embedding。";
@@ -239,6 +250,7 @@ function buildAskStatusText(data = {}) {
   return parts.filter(Boolean).join(" · ");
 }
 
+// 登录视图与主应用视图切换：根据当前用户登录状态显示对应页面。
 function showLogin() {
   loginView.classList.remove("hidden");
   appView.classList.add("hidden");
@@ -266,6 +278,8 @@ function activateView(viewName) {
   if (target) target.classList.remove("hidden");
 }
 
+// 渲染引文来源列表：将每个检索片段展示为引用项，包含来源、相关度和片段摘要。
+// 这些来源帮助用户理解答案基于哪些原始制度文本。
 function renderSources(sources = []) {
   sourcesEl.innerHTML = "";
   if (!sources.length) {
@@ -292,6 +306,8 @@ function renderSources(sources = []) {
   });
 }
 
+// 渲染用户问答历史：最多显示最近 5 条，并允许点击回填提问框继续查看。
+// 渲染用户搜索历史：点击历史记录可以快速回填问题并继续提问。
 function renderHistory(items = []) {
   historyList.innerHTML = "";
   const visibleItems = items.slice(0, HISTORY_VISIBLE_LIMIT);
@@ -319,6 +335,8 @@ function renderHistory(items = []) {
   });
 }
 
+// 管理员账号列表渲染：用于设置页展示已创建的账号信息。
+// 渲染管理员账号列表：显示当前系统中的用户账号信息。
 function renderAccounts(items = []) {
   accountsList.innerHTML = "";
   if (!items.length) {
@@ -367,6 +385,7 @@ function updateModelCardStates() {
   });
 }
 
+// 将后端设置结构标准化为前端表单使用的字段格式。
 function normalizeSettingsShape(settings = {}) {
   const normalized = {
     models: {},
@@ -420,6 +439,7 @@ function applySettings(settings) {
   updateRuntimeMode(currentSettings.active_mode);
 }
 
+// 从当前表单输入收集设置数据，用于提交到后端保存。
 function getSettingsPayload() {
   const models = {};
   Object.entries(modelFields).forEach(([key, fields]) => {
@@ -448,6 +468,7 @@ function getSettingsPayload() {
   };
 }
 
+// 与后端交互的请求封装：统一处理 JSON 解析和错误状态提示。
 async function fetchJson(url, options = {}) {
   const response = await fetch(`${apiBase}${url}`, {
     credentials: "same-origin",
@@ -460,6 +481,7 @@ async function fetchJson(url, options = {}) {
   return data;
 }
 
+// 刷新登录状态接口：检查当前会话是否已登录，以决定显示登录页还是主应用。
 async function refreshSession() {
   const data = await fetchJson("/api/auth/session");
   if (!data.authenticated) {
@@ -471,11 +493,13 @@ async function refreshSession() {
   return true;
 }
 
+// 拉取当前用户的历史记录列表。
 async function loadHistory() {
   const data = await fetchJson("/api/history");
   renderHistory(data.items || []);
 }
 
+// 管理员专用：加载知识库状态、模型设置和账号列表。
 async function loadAdminData() {
   if (!currentUser || currentUser.role !== "admin") return;
 
@@ -494,6 +518,7 @@ async function loadAdminData() {
   renderAccounts(accountsData.items || []);
 }
 
+// 页面事件绑定：处理登录、视图切换、问答提问、设置保存、索引重建等交互行为。
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   loginStatus.textContent = "正在登录...";
@@ -560,6 +585,7 @@ Object.entries(modelFields).forEach(([key, fields]) => {
   });
 });
 
+// 用户点击“提问”按钮时：验证输入、显示加载状态、请求后端问答接口，并渲染结果。
 askBtn.addEventListener("click", async () => {
   const question = questionInput.value.trim();
   if (!question) {
@@ -593,6 +619,7 @@ askBtn.addEventListener("click", async () => {
   }
 });
 
+// 提交个人资料表单：更新手机号并同步历史记录展示。
 profileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   profileStatus.textContent = "正在更新手机号...";
@@ -610,6 +637,7 @@ profileForm.addEventListener("submit", async (event) => {
   }
 });
 
+// 提交密码修改表单：验证当前密码，提交新密码到后端。
 passwordForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   profileStatus.textContent = "正在更新密码...";
@@ -636,6 +664,7 @@ logoutBtn.addEventListener("click", async () => {
   showLogin();
 });
 
+// 保存模型与 Embedding 设置：将前端表单配置发送给后端持久化。
 settingsForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   settingsStatus.textContent = "正在保存模型设置...";

@@ -8,6 +8,7 @@ from typing import List
 
 @dataclass
 class ChunkRecord:
+    """文档分片结构：表示从原始文档提取的一个检索块。"""
     chunk_id: str
     doc_id: str
     file_name: str
@@ -21,11 +22,13 @@ class ChunkRecord:
 
 
 class ChunkingService:
+    """文档分片服务：将长文本切分为可检索的小片段，并保留章节标题路径。"""
     def __init__(self, chunk_size: int = 520, overlap: int = 80):
         self.chunk_size = chunk_size
         self.overlap = overlap
 
     def chunk_document(self, doc_id: str, file_name: str, text: str) -> List[ChunkRecord]:
+        """将文档文本拆分为多个检索片段，并按标题层级组织来源路径。"""
         lines = self._prepare_lines(text)
         if not lines:
             return []

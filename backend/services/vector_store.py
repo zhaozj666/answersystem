@@ -10,6 +10,7 @@ from .chunking_service import ChunkRecord
 
 
 class VectorStore:
+    """向量存储：持久化分片内容、Embedding 向量和索引元数据。"""
     def __init__(self, index_dir: Path):
         self.index_dir = index_dir
         self.chunks_path = index_dir / "chunks.json"

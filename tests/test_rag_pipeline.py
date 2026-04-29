@@ -43,6 +43,14 @@ class BrokenVectorRetrieval:
         return self.fallback_results[:top_k]
 
 
+class KeywordFallbackVectorRetrieval:
+    def __init__(self, fallback_results):
+        self.fallback_results = fallback_results
+
+    def search_with_query_vector(self, question, query_vector, chunks, top_k=5):
+        return self.fallback_results[:top_k]
+
+
 class RagPipelineTest(unittest.TestCase):
     def test_reindex_builds_vectors_for_chunks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -143,6 +151,34 @@ class RagPipelineTest(unittest.TestCase):
             self.assertEqual(result["retrieval_type"], "keyword_fallback")
             self.assertEqual(result["sources"][0]["retrieval_type"], "keyword_fallback")
             self.assertEqual(result["generation_type"], "extractive")
+
+    def test_ask_reports_keyword_fallback_when_vector_search_returns_fallback_results(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp)
+            (docs_dir / "policy.md").write_text(
+                "正式员工是指完成试用期并通过转正审批的员工。",
+                encoding="utf-8",
+            )
+
+            index = IndexService(docs_dir)
+            index.reindex()
+            fallback_results = [
+                {
+                    "chunk_id": index.chunks[0].chunk_id,
+                    "file": index.chunks[0].file_name,
+                    "title_path": index.chunks[0].title_path,
+                    "snippet": index.chunks[0].text[:220],
+                    "score": 0.0,
+                    "retrieval_type": "keyword_fallback",
+                }
+            ]
+            index.retrieval_service = KeywordFallbackVectorRetrieval(fallback_results)
+            qa = QAService(index)
+
+            result = qa.ask("什么是正式员工？", {"enabled": False})
+
+            self.assertEqual(result["retrieval_type"], "keyword_fallback")
+            self.assertEqual(result["sources"][0]["retrieval_type"], "keyword_fallback")
 
     def test_ask_calls_llm_with_numbered_context_and_sources(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

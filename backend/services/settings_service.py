@@ -60,16 +60,19 @@ DEFAULT_SETTINGS: Dict[str, object] = {
 
 
 class SettingsService:
+    """配置服务：加载、校验、合并并保存模型与 Embedding 设置。"""
     def __init__(self, settings_path: Path):
         self.settings_path = settings_path
 
     def load(self, mask_secret: bool = True) -> Dict[str, object]:
+        """加载配置文件并返回标准化后的设置，默认隐藏敏感字段。"""
         stored = self._load_raw()
         normalized = self._normalize(stored)
         payload = self._with_active_fields(normalized)
         return self._mask(payload) if mask_secret else payload
 
     def save(self, payload: Dict[str, object]) -> Dict[str, object]:
+        """保存前端提交的配置，合并旧配置并校验字段范围。"""
         current = self.load(mask_secret=False)
         incoming = dict(payload)
         merged = {
@@ -115,6 +118,7 @@ class SettingsService:
             "max_context_chars": DEFAULT_SETTINGS["max_context_chars"],
         }
 
+        # 先从输入中提取模型配置，如果用户未提供则使用默认模板。
         incoming_models = self._extract_model_payload(settings)
         for model_key, defaults in DEFAULT_MODEL_SETTINGS.items():
             raw = incoming_models.get(model_key, {})
@@ -129,6 +133,7 @@ class SettingsService:
             item["enabled"] = bool(item.get("enabled"))
             normalized["models"][model_key] = item
 
+        # 只允许同时启用一个回答模型，避免多个模型产生冲突。
         enabled_models = [key for key, item in normalized["models"].items() if item["enabled"]]
         if len(enabled_models) > 1:
             raise ValueError("最多只能启用一个回答模型。")
@@ -268,6 +273,7 @@ class SettingsService:
         return "extractive"
 
     def _mask(self, settings: Dict[str, object]) -> Dict[str, object]:
+        """将 API Key 等敏感字段替换为掩码字符串以防泄露。"""
         masked = deepcopy(settings)
         for item in masked.get("models", {}).values():
             if item.get("api_key"):

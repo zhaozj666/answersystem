@@ -9,10 +9,11 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 
 class AuthError(ValueError):
-    pass
+    """认证异常类型：用于在账号验证、创建和更新时抛出业务错误。"""
 
 
 class AuthService:
+    """账号认证服务：管理登录、密码校验、账号创建、手机号更新与持久化。"""
     def __init__(
         self,
         accounts_path: Path,
@@ -25,6 +26,7 @@ class AuthService:
         self._ensure_bootstrap()
 
     def authenticate(self, phone: str, password: str) -> Optional[Dict[str, object]]:
+        """验证手机号和密码，成功返回公开账号信息，否则返回 None。"""
         account = self._find_account(phone)
         if not account:
             return None

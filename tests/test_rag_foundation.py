@@ -5,13 +5,34 @@ import unittest
 from pathlib import Path
 
 from backend.services.chunking_service import ChunkingService
+from backend.services.document_loader import DocumentLoader
 from backend.services.embedding_service import EmbeddingService
 from backend.services.index_service import IndexService
 from backend.services.retrieval_service import RetrievalService
 from backend.services.vector_store import VectorStore
 
 
+class ZeroVectorEmbeddingService:
+    def embed(self, text: str):
+        return [0.0, 0.0]
+
+    def similarity(self, left, right):
+        return 0.0
+
+
 class RagFoundationTest(unittest.TestCase):
+    def test_document_loader_ignores_placeholder_readme_in_policies_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp) / "docs" / "policies"
+            docs_dir.mkdir(parents=True, exist_ok=True)
+            (docs_dir / "README.md").write_text("请把制度文件放到这里。", encoding="utf-8")
+            (docs_dir / "policy.md").write_text("正式员工应遵守制度。", encoding="utf-8")
+
+            loader = DocumentLoader(docs_dir)
+            files = loader.scan_files()
+
+            self.assertEqual([path.name for path in files], ["policy.md"])
+
     def test_chunking_service_builds_structured_chunks(self) -> None:
         service = ChunkingService()
         chunks = service.chunk_document(
@@ -100,6 +121,24 @@ class RagFoundationTest(unittest.TestCase):
         self.assertIn("title_path", results[0])
         self.assertIn("snippet", results[0])
         self.assertIn("score", results[0])
+
+    def test_vector_search_falls_back_to_keyword_when_scores_are_all_zero(self) -> None:
+        chunking = ChunkingService()
+        chunks = chunking.chunk_document(
+            doc_id="doc-1",
+            file_name="policy.md",
+            text="正式员工应遵守考勤制度。年假按照司龄计算。",
+        )
+        for chunk in chunks:
+            chunk.embedding = [0.0, 0.0]
+
+        retrieval = RetrievalService(embedding_service=ZeroVectorEmbeddingService())
+
+        results = retrieval.search("什么是正式员工", chunks, top_k=3, use_vector=True)
+
+        self.assertTrue(results)
+        self.assertEqual(results[0]["retrieval_type"], "keyword_fallback")
+        self.assertGreaterEqual(float(results[0]["score"]), 0.0)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,7 @@
+/*
+  样式入口文件：定义全局颜色变量、布局规则、组件样式和响应式行为。
+  这里使用 CSS 变量统一管理主题色调，便于后续维护和调整界面风格。
+*/
 :root {
   --bg: #eef2f6;
   --panel: rgba(255, 255, 255, 0.94);
@@ -46,10 +50,12 @@ button {
   border: 0;
 }
 
+/* 通用辅助类 */
 .hidden {
   display: none !important;
 }
 
+/* 登录页布局与卡片样式 */
 .login-screen {
   min-height: 100vh;
   display: grid;
@@ -99,6 +105,7 @@ button {
   gap: 12px;
 }
 
+/* 主应用整体布局：侧边导航 + 内容区 */
 .app-shell {
   min-height: 100vh;
   display: grid;
@@ -247,6 +254,7 @@ button {
   box-shadow: 0 0 0 5px rgba(5, 150, 105, 0.12);
 }
 
+/* 面板组件：用作卡片、信息展示区、设置面板等 */
 .panel {
   border-radius: 20px;
   padding: 18px;

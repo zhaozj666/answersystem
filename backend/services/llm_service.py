@@ -10,10 +10,11 @@ from .index_service import Chunk
 
 
 class LLMError(RuntimeError):
-    pass
+    """大模型调用异常：封装模型接口请求失败的业务错误信息。"""
 
 
 class LLMClient:
+    """大模型通信客户端：发送 chat/completions 请求，并构建系统提示与用户提示。"""
     def generate_answer(
         self,
         question: str,
@@ -37,6 +38,7 @@ class LLMClient:
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
+        # 构建标准 OpenAI-compatible chat completion 请求体。
         payload = {
             "model": model,
             "messages": self._messages(question, context, sources),
@@ -49,6 +51,7 @@ class LLMClient:
             provider_name=str(settings.get("provider_name") or ""),
             model=model,
         )
+        # 解析模型响应，确保至少存在一个回答选项。
         choices = data.get("choices") or []
         if not choices:
             raise LLMError("模型接口未返回 choices。")
@@ -59,6 +62,7 @@ class LLMClient:
         return str(content).strip()
 
     def extractive_answer(self, question: str, contexts: List[Chunk]) -> str:
+        """生成本地抽取式回答：将最相关的检索片段原文返回给用户。"""
         if not contexts:
             return "未检索到明确依据。请补充更具体的问题，或先完善制度文档。"
 
@@ -83,6 +87,7 @@ class LLMClient:
         context: str,
         sources: List[Dict[str, object]],
     ) -> List[Dict[str, str]]:
+        # 将引用文档的目录信息拼成 summary，供模型用于回答时说明来源。
         source_summary = "\n".join(
             [
                 f"[{index}] {item.get('file') or '未知文档'}"
@@ -130,12 +135,14 @@ class LLMClient:
             method="POST",
         )
         try:
+            # 发起 HTTP POST 请求到模型服务，并解析 JSON 响应。
             with urllib.request.urlopen(request, timeout=20) as response:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="ignore")
             raise LLMError(self._friendly_error(provider_name, model, detail or str(exc))) from exc
         except urllib.error.URLError as exc:
+            # 常见网络错误处理：超时、Ollama 未启动、其他连接失败。
             if isinstance(exc.reason, (TimeoutError, socket.timeout)):
                 raise LLMError("模型请求超过 20 秒，已回退本地摘要。") from exc
             if provider_name == "ollama":

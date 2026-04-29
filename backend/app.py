@@ -81,6 +81,7 @@ def create_app(
 
         return wrapped
 
+    # 路由定义：前端首页、健康检查、认证、用户管理、问答、索引和设置相关接口。
     @app.get("/")
     def root_page():
         return send_from_directory(str(frontend_dir), "index.html")

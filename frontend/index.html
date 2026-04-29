@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <!-- 页面元信息：声明字符编码，适配移动设备视窗，显示页面标题 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>内部规章制度智能问答助手</title>
+  <!-- 外部样式表：页面的视觉样式由 /css/style.css 提供 -->
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+  <!-- 登录页面区域：默认显示登录表单，用户认证成功后展示主应用界面 -->
   <div id="loginView" class="login-screen">
     <section class="login-card">
       <div class="login-copy">
@@ -15,6 +18,7 @@
         <p>登录后即可进行制度问答、查看个人历史记录，并按权限访问系统设置。</p>
       </div>
       <form id="loginForm" class="login-form">
+        <!-- 登录表单：手机号和密码输入框，以及登录按钮 -->
         <label>
           <span>手机号</span>
           <input id="loginPhone" type="text" maxlength="11" placeholder="请输入手机号">
@@ -29,35 +33,43 @@
     </section>
   </div>
 
+  <!-- 主应用界面：登录成功后显示，初始状态 hidden 由脚本控制切换 -->
   <div id="appView" class="app-shell hidden">
+    <!-- 侧边导航栏：控制页面主要视图切换 -->
     <aside class="app-rail" aria-label="应用导航">
       <div class="brand-mark" aria-hidden="true">知</div>
       <nav class="rail-nav">
         <button class="rail-item active" type="button" data-view="qa">问答</button>
         <button class="rail-item" type="button" data-view="center">我的</button>
+        <!-- 设置按钮默认隐藏，仅管理员或有权限用户可见 -->
         <button id="settingsNav" class="rail-item hidden" type="button" data-view="settings">设置</button>
       </nav>
     </aside>
 
+    <!-- 右侧主内容区：根据左侧导航显示不同视图 -->
     <main class="workspace">
       <header class="topbar">
         <div class="topbar-main">
           <p class="eyebrow">智能问答工作台</p>
           <h1>内部规章制度智能问答助手</h1>
+          <!-- welcomeText 会在登录后由 JavaScript 填充用户信息 -->
           <p id="welcomeText">欢迎使用。</p>
         </div>
         <div class="topbar-side">
+          <!-- userBadge 用来显示当前登录用户身份 -->
           <div id="userBadge" class="user-badge">访客</div>
           <div class="runtime-card">
             <span class="status-dot"></span>
             <div>
               <strong id="runtimeMode">本地检索</strong>
+              <!-- kbStatus 显示知识库或系统运行状态 -->
               <span id="kbStatus">等待系统状态...</span>
             </div>
           </div>
         </div>
       </header>
 
+      <!-- 问答视图：主工作区，用户在这里输入问题并查看回答结果 -->
       <section id="qaView" class="view-panel">
         <div class="panel qa-layout">
           <div class="panel-header">
@@ -66,6 +78,7 @@
             </div>
           </div>
 
+          <!-- 问答状态条：显示当前模式、检索方式、Embedding 模型等信息 -->
           <div class="info-strip">
             <div class="info-item">
               <span class="info-label">当前模式</span>
@@ -93,6 +106,7 @@
           <p id="qaEmbeddingNotice" class="helper-text qa-embedding-notice hidden">当前为轻量 fallback 检索模式，效果可能较弱，建议配置真实 Embedding。</p>
 
           <div class="question-box">
+            <!-- 问题输入区：用户输入文本或点击快速问题按钮 -->
             <div class="question-toolbar">
               <span class="toolbar-title">问题输入</span>
               <span class="toolbar-tip">建议尽量描述完整场景，例如岗位、费用类型、审批节点</span>
@@ -110,6 +124,7 @@
             </div>
           </div>
 
+          <!-- 回答区域：显示生成的答案 -->
           <div class="answer-card">
             <div class="answer-title">
               <span class="answer-icon">A</span>
@@ -118,6 +133,7 @@
             <div id="answerText" class="answer-text empty">等待提问后显示答案。</div>
           </div>
 
+          <!-- 引用来源：显示检索到的文档片段和出处 -->
           <div class="sources-card">
             <div class="answer-title">
               <span class="answer-icon secondary">引</span>
@@ -130,6 +146,7 @@
         </div>
       </section>
 
+      <!-- 我的页面：展示用户信息、个人配置和搜索历史 -->
       <section id="centerView" class="view-panel hidden">
         <div class="stack-layout center-stack">
           <section class="panel overview-panel">
@@ -156,12 +173,13 @@
               </div>
             </dl>
 
+            <!-- 退出登录按钮：登出后返回登录界面 -->
             <div class="inline-actions">
               <button id="logoutBtn" class="danger-btn" type="button">退出登录</button>
-              <p id="profileStatus" class="helper-text">你可以在下方维护个人信息，并查看自己的搜索历史。</p>
             </div>
           </section>
 
+          <!-- 选项卡：安全信息和历史记录两部分内容 -->
           <section class="panel center-tabs-panel">
             <div class="center-tabs" role="tablist" aria-label="我的页面选项卡">
               <button class="center-tab active" type="button" data-center-tab="profile" role="tab" aria-selected="true">安全与信息</button>
@@ -176,6 +194,7 @@
                   </div>
                 </div>
 
+                <!-- 修改手机号和密码的表单 -->
                 <div class="section-stack">
                   <form id="profileForm" class="settings-form">
                     <label>
@@ -196,6 +215,7 @@
                     </label>
                     <button class="secondary-btn section-btn" type="submit">修改密码</button>
                   </form>
+                  <p id="profileStatus" class="helper-text">鍙湪杩欓噷淇敼鎵嬫満鍙锋垨瀵嗙爜銆?/p>
                 </div>
               </section>
 
@@ -215,6 +235,7 @@
         </div>
       </section>
 
+      <!-- 设置视图：管理员或有权限用户可以在此修改模型与知识库配置 -->
       <section id="settingsView" class="view-panel hidden">
         <div class="stack-layout settings-stack">
           <section class="panel overview-panel">
@@ -504,6 +525,51 @@
                     <p>当前界面先保留为权限规划占位区，后续再接入正式的用户角色与文档权限管理。</p>
                   </div>
                 </div>
+
+                <div class="section-stack">
+                  <form id="createAccountForm" class="settings-form section-block">
+                    <label>
+                      <span>新账号手机号</span>
+                      <input id="newAccountPhone" type="text" maxlength="11" placeholder="请输入新账号手机号">
+                    </label>
+                    <label>
+                      <span>初始密码</span>
+                      <input id="newAccountPassword" type="password" placeholder="请输入初始密码">
+                    </label>
+                    <label>
+                      <span>账号角色</span>
+                      <select id="newAccountRole">
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                      </select>
+                    </label>
+                    <button class="secondary-btn section-btn" type="submit">创建账号</button>
+                  </form>
+
+                  <form id="resetPasswordForm" class="settings-form section-block">
+                    <label>
+                      <span>重置目标手机号</span>
+                      <input id="resetPhone" type="text" maxlength="11" placeholder="请输入需要重置的手机号">
+                    </label>
+                    <label>
+                      <span>新密码</span>
+                      <input id="resetPassword" type="password" placeholder="请输入新的登录密码">
+                    </label>
+                    <button class="secondary-btn section-btn" type="submit">重置密码</button>
+                  </form>
+                </div>
+
+                <p id="adminStatus" class="helper-text">管理员可以在这里创建账号、重置密码，并查看当前账号列表。</p>
+
+                <div class="sources-card">
+                  <div class="answer-title">
+                    <span class="answer-icon secondary">户</span>
+                    <h3>账号列表</h3>
+                  </div>
+                  <div id="accountsList" class="history-list">
+                    <p class="muted">暂无账号数据</p>
+                  </div>
+                </div>
               </section>
             </div>
           </section>
@@ -512,6 +578,7 @@
     </main>
   </div>
 
+  <!-- 脚本入口：页面交互逻辑和视图切换由 /js/app.js 处理 -->
   <script src="/js/app.js"></script>
 </body>
 </html>

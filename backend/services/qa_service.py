@@ -24,17 +24,20 @@ MODE_LABELS = {
 
 
 class QAService:
+    """问答服务：负责从检索索引获取相关片段，并在必要时调用大模型生成回答。"""
     def __init__(self, index_service: IndexService, llm_client: LLMClient | None = None):
         self.index_service = index_service
         self.llm_client = llm_client or LLMClient()
         self.fallback_client = LLMClient()
 
     def ask(self, question: str, settings: Dict[str, object] | None = None) -> Dict[str, object]:
+        """问答入口：根据当前索引状态检索上下文，决定是否调用大模型生成或使用本地摘要。"""
         started_at = time.perf_counter()
         runtime_settings = settings or {}
         used_model = self._resolve_used_model(runtime_settings)
         debug_timing = self._empty_timing()
 
+        # 如果向量索引文件都不存在，说明没有执行过重建索引，直接返回提示。
         if not self.index_service.vector_store.exists():
             debug_timing["total_ms"] = self._elapsed_ms(started_at)
             response = self._build_response(
@@ -52,6 +55,7 @@ class QAService:
             self._log_timing(question, response)
             return response
 
+        # 如果索引文件存在但当前内存中还没有加载成功的片段，说明索引尚未就绪。
         if not self.index_service.is_index_ready:
             debug_timing["total_ms"] = self._elapsed_ms(started_at)
             response = self._build_response(
@@ -69,6 +73,7 @@ class QAService:
             self._log_timing(question, response)
             return response
 
+        # 确定本次检索使用的上下文片段数，并执行检索。
         max_context_sources = self._get_int_setting(runtime_settings, "max_context_sources", MAX_CONTEXT_SOURCES)
         top_k = max_context_sources
         retrieval_results, retrieval_type, retrieval_warning, retrieval_timing = self._retrieve(question, top_k=top_k)
@@ -86,6 +91,7 @@ class QAService:
                 f"file={item.get('file')} retrieval={item.get('retrieval_type')} preview={preview}"
             )
 
+        # 如果检索结果为空，说明没有命中任何语义片段，直接返回“未检索到明确依据”。
         if not retrieval_results:
             debug_timing["total_ms"] = self._elapsed_ms(started_at)
             response = self._build_response(
@@ -135,6 +141,7 @@ class QAService:
             self._log_timing(question, response)
             return response
 
+        # 如果未在设置中启用大模型，则使用本地 extractive 摘要回答。
         if not runtime_settings.get("enabled"):
             answer = self.fallback_client.extractive_answer(question, contexts)
             debug_timing["total_ms"] = self._elapsed_ms(started_at)
@@ -153,6 +160,7 @@ class QAService:
             self._log_timing(question, response)
             return response
 
+        # 尝试用大模型生成回答，启用时以模型设置为准。
         requested_mode = self._resolve_requested_mode(runtime_settings)
         llm_started_at = time.perf_counter()
         try:
@@ -215,9 +223,11 @@ class QAService:
         question: str,
         top_k: int,
     ) -> Tuple[List[Dict[str, object]], str, str | None, Dict[str, int]]:
+        """执行检索流程：优先使用向量检索，失败时回退到关键词检索。"""
         retrieval_started_at = time.perf_counter()
         timing = self._empty_timing()
 
+        # 真实 Embedding 模式下，如果当前查询服务不可用，则回退关键词检索。
         if self.index_service.embedding_quality == "real" and not self.index_service.embedding_service.is_real_enabled_and_configured():
             warning = "当前索引基于真实 Embedding 构建，但当前未配置可用的真实 Embedding 查询服务，已回退关键词检索。"
             print(f"[ASK][WARN] {warning}")
@@ -241,8 +251,12 @@ class QAService:
                 top_k=top_k,
             )
             timing["retrieval_ms"] = self._elapsed_ms(retrieval_started_at)
-            return results, "vector", None, timing
+            actual_retrieval_type = "vector"
+            if results and all(str(item.get("retrieval_type") or "") == "keyword_fallback" for item in results):
+                actual_retrieval_type = "keyword_fallback"
+            return results, actual_retrieval_type, None, timing
         except Exception as exc:  # noqa: BLE001
+            # 向量检索出现异常时，自动回退到关键词检索，避免整个问答失败。
             warning = f"向量检索失败，已回退关键词检索：{exc}"
             print(f"[ASK][WARN] {warning}")
             results = self.index_service.retrieval_service.search(
@@ -262,6 +276,7 @@ class QAService:
         max_snippet_chars: int,
         max_context_chars: int,
     ) -> List[Dict[str, object]]:
+        """按片段数量与字符数限制切分检索结果，确保上下文不会超过模型输入限制。"""
         limited: List[Dict[str, object]] = []
         total_chars = 0
 
@@ -286,6 +301,7 @@ class QAService:
         return limited
 
     def _build_sources(self, retrieval_results: List[Dict[str, object]]) -> List[Dict[str, object]]:
+        """从检索结果中提取前端需要展示的引用来源字段。"""
         return [
             {
                 "file": item.get("file"),
@@ -304,6 +320,7 @@ class QAService:
         max_context_sources: int,
         max_context_chars: int,
     ) -> str:
+        """将引用片段拼接成大模型输入上下文，包含索引编号、文档路径与片段内容。"""
         blocks: List[str] = []
         total_chars = 0
 
@@ -333,6 +350,7 @@ class QAService:
         return "\n\n".join(blocks).strip()[:max_context_chars]
 
     def _resolve_requested_mode(self, settings: Dict[str, object]) -> str:
+        """解析当前用户配置中选定的模型类型。"""
         provider_name = str(settings.get("provider_name") or "").strip().lower()
         if provider_name in ("gpt", "deepseek", "qwen", "ollama"):
             return provider_name
@@ -342,6 +360,7 @@ class QAService:
         return "gpt"
 
     def _resolve_used_model(self, settings: Dict[str, object]) -> str | None:
+        """如果启用了大模型，则返回模型名称，否则返回 None。"""
         if not settings.get("enabled"):
             return None
         model = str(settings.get("model") or "").strip()
@@ -381,6 +400,7 @@ class QAService:
         return MODE_LABELS.get(mode, "本地检索模式")
 
     def _empty_timing(self) -> Dict[str, int]:
+        """初始化调试计时结构，用于记录问答各阶段耗时。"""
         return {
             "question_embedding_ms": 0,
             "retrieval_ms": 0,
@@ -398,6 +418,7 @@ class QAService:
             return default
 
     def _log_timing(self, question: str, response: Dict[str, object]) -> None:
+        """将问答过程的耗时信息打印到控制台，便于排查性能问题。"""
         timing = response.get("debug_timing") or {}
         print(
             "[ASK][TIMING] "

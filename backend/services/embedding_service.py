@@ -16,6 +16,7 @@ LOCAL_FALLBACK_MODEL = "local_hash_fallback"
 
 
 class BaseEmbeddingBackend:
+    """Embedding 后端基类：约定 provider_name、model_name 和 quality 属性。"""
     provider_name = "base"
     model_name = "base"
     quality = "fallback"
@@ -30,6 +31,7 @@ class BaseEmbeddingBackend:
 
 
 class LocalHashEmbeddingBackend(BaseEmbeddingBackend):
+    """本地哈希 Embedding：用于低成本 fallback 向量生成，适合没有真实 Embedding 配置时使用。"""
     provider_name = "local_hash"
     model_name = LOCAL_FALLBACK_MODEL
     quality = "fallback"
@@ -67,6 +69,7 @@ class LocalHashEmbeddingBackend(BaseEmbeddingBackend):
 
 
 class OpenAICompatibleEmbeddingBackend(BaseEmbeddingBackend):
+    """兼容 OpenAI API 的 Embedding 后端：支持云端真实 Embedding 计算。"""
     provider_name = "openai_compatible"
     quality = "real"
 
@@ -113,6 +116,7 @@ class OpenAICompatibleEmbeddingBackend(BaseEmbeddingBackend):
 
 
 class EmbeddingService:
+    """Embedding 服务：根据配置选择真实 Embedding 或本地回退 Embedding，并返回向量。"""
     def __init__(
         self,
         provider_name: str = "",

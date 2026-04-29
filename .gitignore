@@ -8,3 +8,5 @@ data_index.json
 runtime/
 runtime/model_settings.json
 runtime/rag_index/
+.agents/
+docs/policies/

@@ -8,10 +8,12 @@ from typing import Dict, List
 
 
 class HistoryService:
+    """历史服务：记录用户问答行为并支持查询与手机号迁移。"""
     def __init__(self, history_path: Path):
         self.history_path = history_path
 
     def add_entry(self, phone: str, question: str, answer: str, source_count: int) -> Dict[str, object]:
+        """保存一条问答历史，限制答案长度以减少存储量。"""
         store = self._load_store()
         item = {
             "id": uuid.uuid4().hex,

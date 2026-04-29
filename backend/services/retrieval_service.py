@@ -9,10 +9,12 @@ from .embedding_service import EmbeddingService
 
 
 class RetrievalService:
+    """检索服务：根据向量相似度或关键词匹配从内容片段中排名返回最相关结果。"""
     def __init__(self, embedding_service: EmbeddingService):
         self.embedding_service = embedding_service
 
     def search(self, question: str, chunks: List[ChunkRecord], top_k: int = 5, use_vector: bool = True) -> List[Dict[str, object]]:
+        """选择向量检索或关键词检索，返回排名前 top_k 的片段结果。"""
         if not chunks:
             return []
         if use_vector and all(chunk.embedding for chunk in chunks):
@@ -54,7 +56,9 @@ class RetrievalService:
         ]
         scored.sort(key=lambda item: float(item["score"]), reverse=True)
         positives = [item for item in scored[:top_k] if float(item["score"]) > 0]
-        return positives or scored[:top_k]
+        if positives:
+            return positives
+        return self._keyword_search(question, chunks, top_k=top_k)
 
     def _keyword_search(self, question: str, chunks: List[ChunkRecord], top_k: int) -> List[Dict[str, object]]:
         query_tokens = self._tokenize(question)

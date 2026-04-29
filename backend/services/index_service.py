@@ -13,6 +13,7 @@ Chunk = ChunkRecord
 
 
 class IndexService:
+    """索引服务：管理文档加载、文本分片、Embedding 生成、向量保存与检索状态。"""
     def __init__(
         self,
         docs_dir: Path,
@@ -65,6 +66,7 @@ class IndexService:
         }
 
     def reindex(self) -> Dict[str, object]:
+        """重新构建索引：扫描文档、分片、生成 Embedding、保存向量文件。"""
         if self._custom_embedding_service is None:
             self.embedding_service = EmbeddingService.low_memory_default()
         else:
@@ -78,6 +80,7 @@ class IndexService:
 
         for file_path in files:
             try:
+                # 读取文件纯文本并生成文档唯一 ID
                 loaded = self.loader.load_file(file_path)
                 doc_id = self.chunking_service.build_doc_id(file_path.name)
                 file_chunks = self.chunking_service.chunk_document(
@@ -91,6 +94,7 @@ class IndexService:
                     )
                     continue
 
+                # 为每个分片生成 Embedding 向量，并添加到总片段列表。
                 for chunk in file_chunks:
                     chunk.embedding = self.embedding_service.embed(chunk.text)
                 chunks.extend(file_chunks)
@@ -143,6 +147,7 @@ class IndexService:
         }
 
     def search(self, question: str, top_k: int = 5) -> List[Tuple[float, Chunk]]:
+        """辅助搜索函数：根据当前向量存储状态决定是否使用向量检索。"""
         results = self.retrieval_service.search(
             question=question,
             chunks=self.chunks,
@@ -160,6 +165,7 @@ class IndexService:
         return matched
 
     def _load_existing_index(self) -> None:
+        """尝试从磁盘加载已有索引，使应用启动后直接可用。"""
         chunks, manifest = self.vector_store.load()
         if not chunks:
             return
@@ -174,6 +180,7 @@ class IndexService:
         )
 
     def _default_index_dir(self, docs_dir: Path) -> Path:
+        """计算默认索引存储目录，优先放在仓库 runtime/rag_index 下。"""
         if docs_dir.parent.name == "docs":
             return docs_dir.parent.parent / "runtime" / "rag_index"
         if docs_dir.name == "policies" and docs_dir.parent.name == "docs":

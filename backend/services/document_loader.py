@@ -15,6 +15,7 @@ class LoadedDocument:
 
 
 class DocumentLoader:
+    """文档加载器：扫描支持格式的知识库文件并提取纯文本内容。"""
     def __init__(self, docs_dir: Path):
         self.docs_dir = docs_dir
         self.supported_suffixes = {".pdf", ".docx", ".txt", ".md"}
@@ -23,7 +24,9 @@ class DocumentLoader:
         files = [
             path
             for path in self.docs_dir.rglob("*")
-            if path.is_file() and path.suffix.lower() in self.supported_suffixes
+            if path.is_file()
+            and path.suffix.lower() in self.supported_suffixes
+            and not self._should_skip_file(path)
         ]
         files.sort()
         print(f"[INDEX] 扫描到文件: {[file.name for file in files]}")
@@ -44,3 +47,6 @@ class DocumentLoader:
 
         print(f"[INDEX] 读取文件: {file_path.name}, 文本长度={len(text)}")
         return LoadedDocument(file_path=file_path, text=text)
+
+    def _should_skip_file(self, file_path: Path) -> bool:
+        return file_path.name.lower() == "readme.md"
